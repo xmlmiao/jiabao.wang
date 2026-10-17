@@ -24,7 +24,7 @@ export function createDialog(element:HTMLDivElement){
       artwork.pixels.forEach((row,y)=>[...row].forEach((ch,x)=>{const color=artwork.palette![ch];if(color){ctx.fillStyle=color;ctx.fillRect(x*unit,y*unit,unit,unit);}}));
       image=canvas.toDataURL();
     }
-    say('🖼 '+artwork.title+' · '+artwork.year,artwork.desc,true,image);
+    say('🖼 '+artwork.title+(artwork.year?' · '+artwork.year:''),artwork.desc,true,image);
     artworkIndex=GALLERY.indexOf(artwork);
     const row=document.createElement('div');row.className='art-row';
     const arrow=(label:string,direction:number)=>{

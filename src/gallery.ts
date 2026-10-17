@@ -11,8 +11,8 @@ export const GALLERY:Artwork[] = [
   { title:"窗台绿萝", year:"2026", desc:"唯一一个不需要烧录固件\n就能自己长大的东西。",
     palette:{e:"#f3e2c7",g:"#4caf50",G:"#2e7d32",t:"#c0603a",T:"#8a3d22"},
     pixels:["eeeeeeeeeeee","eeeeegeeeeee","eeegGgegeeee","eegGgggGgeee","eeeGgGgggGee","eegggGgGgeee","eeeGgggGeeee","eeeettttteee","eeeetTTTteee","eeeetttteeee","eeeeTTTTeeee","eeeeeeeeeeee"] },
-  { title:"2026 毕业典礼 · 和胶哥", year:"2026", desc:"和最好的朋友胶哥，哈尔滨工程大学。",
-    img:"assets/gallery/grad-2026.png", thumb:"assets/gallery/grad-2026.png", crop:[42,30,320,320] },
+  { title:"毕业典礼", year:"", desc:"2026年6月24号毕业典礼，Bao和胶哥在北体激情比心❤",
+    img:"assets/gallery/grad-2026.png", thumb:"assets/gallery/grad-2026-cover.png" },
 ];
 export const ART_SIZE=20;
 export async function prepareGallery(){
