@@ -16,6 +16,7 @@ h1 small{display:block;font-size:12px;color:#9aa3c7;letter-spacing:1px;margin-to
 canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer}
 #dlg{position:absolute;left:8px;right:8px;bottom:8px;background:#fdf6e3;color:#2b2140;border:4px solid #2b2140;box-shadow:inset -4px -4px 0 #d8c9a3,inset 4px 4px 0 #fff,4px 4px 0 rgba(0,0,0,.4);padding:12px 14px 14px;font-size:14px;line-height:1.7;display:none;white-space:pre-line;cursor:pointer}
 #dlg.top{bottom:auto;top:8px}
+#dlg img{display:block;max-width:min(100%,260px);max-height:45vh;image-rendering:pixelated;margin:6px auto 0;border:3px solid #2b2140}
 #dlg b{display:inline-block;background:#2b2140;color:#fdf6e3;padding:0 6px;margin-bottom:4px}
 #dlg:after{content:"▼";position:absolute;right:10px;bottom:4px;font-size:10px;animation:bl 1s steps(2) infinite}
 @keyframes bl{50%{opacity:0}}
@@ -45,7 +46,11 @@ const GALLERY = [
   { title:"窗台绿萝", year:"2026", desc:"唯一一个不需要烧录固件\n就能自己长大的东西。",
     palette:{e:"#f3e2c7",g:"#4caf50",G:"#2e7d32",t:"#c0603a",T:"#8a3d22"},
     pixels:["eeeeeeeeeeee","eeeeegeeeeee","eeegGgegeeee","eegGgggGgeee","eeeGgGgggGee","eegggGgGgeee","eeeGgggGeeee","eeeettttteee","eeeetTTTteee","eeeetttteeee","eeeeTTTTeeee","eeeeeeeeeeee"] },
+  { title:"2026 毕业典礼 · 和胶哥", year:"2026", desc:"和最好的朋友胶哥，哈尔滨工程大学。",
+    img:"assets/gallery/grad-2026.png", thumb:"assets/gallery/grad-2026-thumb.png", w:12, h:12 },
 ];
+/* 图片类画作：img=点开后显示的大图，thumb=墙上的小缩略图（w×h 像素） */
+GALLERY.forEach(g=>{if(g.thumb){g.timg=new Image();g.timg.src=g.thumb}});
 
 const C = document.getElementById('c'), X = C.getContext('2d'), W=192, H=128;
 const dlg = document.getElementById('dlg'), stage = document.getElementById('stage');
@@ -67,7 +72,7 @@ function add(x,y,w,h,fn){items.push({x,y,w,h,fn})}
 function galleryLayout(){
  const feat=GALLERY.filter(g=>g.featured),rest=GALLERY.filter(g=>!g.featured);
  const half=Math.ceil(rest.length/2),order=[...rest.slice(0,half),...feat,...rest.slice(half)];
- const dims=order.map(g=>({g,w:g.pixels[0].length+4,h:g.pixels.length+4}));
+ const dims=order.map(g=>({g,w:(g.pixels?g.pixels[0].length:g.w)+4,h:(g.pixels?g.pixels.length:g.h)+4}));
  const L=52,R=152,total=dims.reduce((a,d)=>a+d.w,0),gap=Math.max(1,Math.floor((R-L-total)/Math.max(1,dims.length-1)));
  let x=L+Math.floor((R-L-total-gap*(dims.length-1))/2);const base=32;
  return dims.map(d=>{const o={...d,x,y:base-d.h};x+=d.w+gap;return o});
@@ -96,6 +101,7 @@ function drawRoom(f){
  r(36,38,6,5,'#c0603a');r(37,34,1,4,'#4caf50');r(39,32,1,6,'#2e7d32');r(40,35,2,1,'#4caf50');r(35,36,2,1,'#4caf50');
  // 画廊
  galleryLayout().forEach(({g,x,y,w,h})=>{r(x,y,w,h,'#3a2a20');r(x+1,y+1,w-2,h-2,g.featured?'#f2c94c':'#d9a441');
+   if(g.timg){if(g.timg.naturalWidth)X.drawImage(g.timg,x+2,y+2,g.w,g.h);return}
    const pal=g.palette;g.pixels.forEach((row,j)=>[...row].forEach((ch,k)=>{if(pal[ch])r(x+2+k,y+2+j,1,1,pal[ch])}))});
  // 书架
  r(156,34,30,56,'#5a3e2b');r(158,36,26,52,'#3a2a20');
@@ -159,10 +165,10 @@ let F=0;function loop(){X.clearRect(0,0,W,H);X.imageSmoothingEnabled=false;drawR
 
 /* ---- 对话框 ---- */
 let typing=null;
-function say(title,text,top){clearInterval(typing);dlg.classList.toggle('top',!!top);dlg.style.display='block';dlg.innerHTML='<b></b><br><span></span>';dlg.querySelector('b').textContent=title;const sp=dlg.querySelector('span');let i=0;typing=setInterval(()=>{sp.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(typing)},28)}
+function say(title,text,top,img){clearInterval(typing);dlg.classList.toggle('top',!!top);dlg.style.display='block';dlg.innerHTML='<b></b><br><span></span>';dlg.querySelector('b').textContent=title;if(img){const im=document.createElement('img');im.src=img;im.alt=title;dlg.appendChild(im)}const sp=dlg.querySelector('span');let i=0;typing=setInterval(()=>{sp.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(typing)},28)}
 dlg.onclick=e=>{e.stopPropagation();dlg.style.display='none'};
 
-galleryLayout().forEach(({g,x,y,w,h})=>add(x,y,w,h,()=>say('🖼 '+g.title+' · '+g.year,g.desc)));
+galleryLayout().forEach(({g,x,y,w,h})=>add(x,y,w,h,()=>say('🖼 '+g.title+' · '+g.year,g.desc,!!g.img,g.img)));
 add(68,48,26,22,()=>say('💻 电脑','这是 Bao 的电脑。\nBao：哈尔滨工程大学毕业，在水下机器人公司做嵌入式工程师。\n平时写 C/C++，玩 STM32、RTOS、ArduSub 和 ROS；\n在学校时做过 AUV/ROV，也打过水下机器人比赛。'));
 add(8,60,26,44,()=>say('📮 信箱','想给 Bao 写信？\n✉ Email：（待填写）\n🐙 GitHub：（待填写）\n旗子立起来了，说明……有新邮件？'));
 add(156,34,30,56,()=>say('📚 书架','《STM32 从入门到冒烟》《RTOS 的一百种死锁》\n《ROS 与它的依赖地狱》《深海漫游指南》'));
