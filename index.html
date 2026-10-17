@@ -58,17 +58,6 @@ addEventListener('resize',fit);fit();
 /* ---- 时间：白天/黄昏/夜晚 ---- */
 function phase(){const h=new Date().getHours();return h>=6&&h<17?'day':h>=17&&h<19?'dusk':'night'}
 
-/* ---- 猫 ---- */
-const CP={o:"#f2a65a",d:"#c46a2b",k:"#222034",w:"#fff",p:"#ff8fa3"};
-const CAT={
- sit:["..o...o....","..oo.oo....",".ooooooo...",".okoooko...",".oowpwoo...","..ooooo....","..ooooo..o.",".ooooooo.o.",".ooooooooo.",".dd.o.dd..."],
- sit2:["..o...o....","..oo.oo....",".ooooooo...",".odoooddo..".slice(0,11),".oowpwoo...","..ooooo....","..ooooo....",".ooooooo...",".oooooooooo",".dd.o.dd..."],
- walk1:["...........","o.......o.o","o.......ooo","oooooooooko","ooooooooopo",".ooooooooo.",".o.o...o.o.",".d..d...d.d","...........","..........."],
- walk2:["...........","o.......o.o",".o......ooo",".ooooooooko",".oooooooopo",".ooooooooo.","..o.o.o.o..","..d.d.d.d..","...........","..........."],
-};
-CAT.blink=CAT.sit.map((l,i)=>i===3?".odoooddo..".slice(0,11):l);
-const cat={x:120,y:100,dir:-1,state:'sit',t:0,target:120};
-
 /* ---- 可点击物体 ---- */
 const items=[];
 function add(x,y,w,h,fn){items.push({x,y,w,h,fn})}
@@ -113,13 +102,55 @@ function drawRoom(f){
  if(ph==='night'){X.fillStyle='rgba(10,10,40,.28)';X.fillRect(0,0,W,H)}else if(ph==='dusk'){X.fillStyle='rgba(255,120,60,.08)';X.fillRect(0,0,W,H)}
 }
 
+/* ---- 猫（所有姿势都按“面朝右”绘制，dir<0 时水平镜像） ---- */
+const CP={o:"#f2a65a",d:"#c46a2b",k:"#222034",w:"#fff",p:"#ff8fa3"};
+const CW=14;
+const POSE={
+ walk:["..........o.o.","..........oooo","...oooooooooko","..oddoddoooooop","..ooooooooooww.","..ooooooooooo.."],
+ sit:[".......o..o...",".......oooo...",".......okok...",".......owpw...","......oooooo..",".....ooooooo..",".....oooooooo.",".....oowooow..",".....dd...dd.."],
+ groom:["..............",".......o..o...",".......oooo...",".......odod.o.",".......owpwoo.","......oooooo..",".....oooooooo.",".....oowooow..",".....dd...dd.."],
+ sleep:["..........o.o.","...ooooooooooo","..ooooooooddoo","..ooddoddoooow","..dddddddddddd"],
+};
+const cat={x:120,y:100,dir:-1,v:0,state:'sit',t:0,dur:200,target:120,phase:0,meow:0};
+const FORCE=(new URLSearchParams(location.search)).get('cat'); // 调试：?cat=left / ?cat=right
+function cpx(i,j,c){r(cat.dir>0?Math.round(cat.x)+i:Math.round(cat.x)+CW-1-i,cat.y+j,1,1,c)}
+function rows(a,oy){a.forEach((row,j)=>[...row].forEach((ch,i)=>{if(CP[ch])cpx(i,j+oy,CP[ch])}))}
+function pick(){
+ const roll=Math.random();cat.t=0;
+ if(roll<.55){cat.state='walk';let tx;do{tx=30+Math.random()*120}while(Math.abs(tx-cat.x)<20);cat.target=tx}
+ else if(roll<.75){cat.state='groom';cat.dur=150+Math.random()*120}
+ else if(roll<.88){cat.state='sleep';cat.dur=400+Math.random()*400}
+ else{cat.state='sit';cat.dur=120+Math.random()*160;if(Math.random()<.6)cat.dir*=-1} // 偶尔转身张望
+}
 function updCat(f){
  cat.t++;
- if(cat.state==='walk'){cat.x+=cat.dir*0.5;if(Math.abs(cat.x-cat.target)<1){cat.state='sit';cat.t=0}}
- else if(cat.t>180+Math.random()*200){cat.target=40+Math.random()*100;cat.dir=cat.target>cat.x?1:-1;cat.state='walk';cat.t=0}
- let s;if(cat.state==='walk')s=(f>>3)&1?CAT.walk1:CAT.walk2;
- else s=(f%160<8)?CAT.blink:((f>>5)&1?CAT.sit:CAT.sit2);
- sprite(s,CP,Math.round(cat.x),cat.y,cat.dir<0&&cat.state==='walk'?false:cat.dir>0);
+ if(FORCE){cat.state='walk';cat.dir=FORCE==='left'?-1:1;cat.target=cat.x+cat.dir*50}
+ if(cat.state==='walk'){
+  const dist=cat.target-cat.x, want=Math.sign(dist)*Math.min(.6,Math.abs(dist)*.04);
+  cat.v+=(want-cat.v)*.06;                         // 起步/停下缓动
+  cat.x+=cat.v; cat.phase+=Math.abs(cat.v)*.35;
+  if(Math.abs(cat.v)>.02)cat.dir=Math.sign(cat.v); // 朝向 = 速度方向
+  if(FORCE){if(cat.x<-16)cat.x=W;if(cat.x>W)cat.x=-16}
+  else if(Math.abs(dist)<.5&&Math.abs(cat.v)<.05){cat.v=0;cat.state='sit';cat.t=0;cat.dur=120+Math.random()*150}
+ }else if(cat.t>cat.dur&&!cat.meow)pick();
+ const s=cat.state, blink=(f%170)<7;
+ if(s==='walk'){
+  const fr=Math.floor(cat.phase)%4, step=[1,0,-1,0][fr], bob=(fr%2)?-1:0, oy=4+bob;
+  rows(POSE.walk,oy);
+  // 尾巴摆动
+  const sway=Math.round(Math.sin(f/8));cpx(1,oy+2,CP.o);cpx(0,oy+1+sway,CP.o);cpx(1,oy+1,CP.o);
+  // 四条腿：对角线两两成对（后左+前右 / 后右+前左）
+  [[3,step],[11,step],[5,-step],[9,-step]].forEach(([lx,o],i)=>{const c=i%2?CP.d:CP.o;cpx(lx,oy+6,c);cpx(lx+o,oy+7,c);if(oy+7<9)cpx(lx+o,9,c)});
+  if(blink)cpx(12,oy+2,CP.o);
+ }else if(s==='sleep'){
+  rows(POSE.sleep,5);cpx(1,7,CP.o);cpx(0,8,CP.o);cpx(1,9,CP.d);
+  if(((f>>5)%3)>0){X.fillStyle='#fff';X.font='6px monospace';X.textBaseline='top';const zx=Math.round(cat.x)+(cat.dir>0?10:0);X.fillText((f>>5)%3>1?'zZ':'z',zx,cat.y-4-((f>>3)%4))}
+ }else{
+  const P=s==='groom'?POSE.groom:POSE.sit;rows(P,1);
+  if(s==='groom'){const lick=(f>>3)&1;cpx(11,lick?3:4,CP.p)}
+  else if(blink)cpx(8,3,CP.o),cpx(10,3,CP.o);
+  const sw=Math.round(Math.sin(f/20)*1.4);cpx(4,9,CP.o);cpx(3,9,CP.o);cpx(2,8,CP.o);cpx(2+(sw>0?0:0),7,CP.o);cpx(2+sw,6,CP.o);
+ }
  if(cat.meow>0){cat.meow--;const bx=Math.round(cat.x)-4,by=cat.y-14;r(bx,by,22,10,'#222034');r(bx+1,by+1,20,8,'#fff');r(bx+5,by+10,2,2,'#222034');
    X.fillStyle='#222034';X.font='7px monospace';X.textBaseline='top';X.fillText('喵~',bx+3,by+1)}
 }
@@ -140,7 +171,7 @@ add(112,56,14,38,()=>say('💡 台灯','啪嗒。灯光暖暖的。\n（灯会�
 add(60,68,46,26,()=>say('🪑 书桌','桌上有一杯咖啡，已经凉了。'));
 
 C.addEventListener('click',e=>{const b=C.getBoundingClientRect(),x=(e.clientX-b.left)*W/b.width,y=(e.clientY-b.top)*H/b.height;
- if(x>=cat.x-2&&x<=cat.x+13&&y>=cat.y-2&&y<=cat.y+11){cat.meow=90;cat.state='sit';cat.t=0;say('🐱 Mochi','喵~ 喵喵！\n（它看起来想要小鱼干）');return}
+ if(x>=cat.x-2&&x<=cat.x+15&&y>=cat.y-2&&y<=cat.y+11){cat.meow=90;cat.v=0;cat.state='sit';cat.t=0;cat.dur=150;say('🐱 Mochi','喵~ 喵喵！\n（它看起来想要小鱼干）');return}
  for(let i=items.length-1;i>=0;i--){const it=items[i];if(x>=it.x&&x<it.x+it.w&&y>=it.y&&y<it.y+it.h){it.fn();return}}
  dlg.style.display='none'});
 loop();
