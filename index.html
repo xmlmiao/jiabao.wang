@@ -125,12 +125,12 @@ function drawRoom(f){
  if(ph==='night'){X.fillStyle='rgba(10,10,40,.28)';X.fillRect(0,0,W,H)}else if(ph==='dusk'){X.fillStyle='rgba(255,120,60,.08)';X.fillRect(0,0,W,H)}
 }
 
-/* ---- 猫 Baxa：像素精灵图 assets/baxa/sheet.png（10 格，每格 29x22，脚底对齐格子底边，原图面朝右） ---- */
+/* ---- 猫 Baxa：像素精灵图 assets/baxa/sheet.png（10 格，每格 18x14，脚底对齐格子底边，原图面朝右） ---- */
 const SHEET=new Image();SHEET.onerror=()=>{SHEET.failed=true};SHEET.src='assets/baxa/sheet.png';
-const SW=29,SH=22,FRAMES=['sit','stand','walk','lie','sleep','look','groom','play','back','box'];
+const SW=18,SH=14,FRAMES=['sit','stand','walk','lie','sleep','look','groom','play','back','box'];
 const IDLE=['sit','lie','groom','sleep'];
 const CATS=[
- {name:'Baxa',title:'🐈‍⬛ Baxa · 小屋的主人',line:'Baxa 是 Bao 家的长毛奶牛猫。\n黑色蓬松大毛毛 + 白围兜 + 四只白手套，\n眼睛盯着你：“有罐罐吗？”',say:'喵?',x:96,foot:116,dir:1},
+ {name:'Baxa',title:'🐈‍⬛ Baxa · 小屋的主人',line:'Baxa 是 Bao 家的长毛奶牛猫。\n黑色蓬松大毛毛 + 白围兜 + 四只白手套，\n眼睛盯着你：“有罐罐吗？”',say:'喵?',x:100,foot:114,dir:1},
 ].map(c=>({v:0,state:'sit',t:0,dur:150+Math.random()*150,target:c.x,phase:0,meow:0,...c}));
 const FORCE=(new URLSearchParams(location.search)).get('cat'); // 调试：?cat=left / ?cat=right / ?cat=<姿势名>
 let cat=CATS[0];
