@@ -26,17 +26,13 @@ footer{font-size:11px;color:#5d6488}
 <body>
 <h1>✦ Bao 的像素小屋 ✦<small>digital asset cottage · jiabao.wang</small></h1>
 <div id="stage"><canvas id="c" width="192" height="128" aria-label="像素小屋场景"></canvas><div id="dlg" role="dialog" aria-live="polite"></div></div>
-<p class="hint">点点房间里的东西：猫、画、电脑、信箱、书架、窗户…<br>tap anything in the room</p>
+<p class="hint">点点房间里的东西：猫 Baxa、画、电脑、信箱、书架、窗户…<br>tap anything in the room</p>
 <footer>© 2026 Bao · made with ♥ & pixels</footer>
 <script>
 /* ===== 画廊数据：在这里添加新的像素画（见 README.md） =====
    pixels: 每行一个字符串，字符对应 palette 里的颜色，"." 表示透明 */
 const GALLERY = [
-  { title:"Baxa — 小屋的主人", year:"2026", featured:true,
-    desc:"Bao 家真正的猫主子 Baxa。\n长毛奶牛猫：一身蓬松黑毛、白围兜、四只白手套，\n琥珀色的眼睛，最爱在木地板上伸懒腰。",
-    palette:{n:"#c98a4b",N:"#a0663d",K:"#1e1b26",G:"#4a4560",W:"#f4f1ea",A:"#f2b632",P:"#111018",p:"#e88a9a"},
-    pixels:["nnnnnnnnnnnnnnnnnnnn", "nnnKnnnnnnnnnnnnKnnn", "nnnKKnnnnnnnnnnKKnnn", "nnnKpKnnnnnnnnKpKnnn", "nnnKKKKKKGGKKKKKKnnn", "nnKKKKKKKKKKKKKKKKnn", "nnKKKKKKKKKKKKKKKKnn", "nnKKAAPKKWWKKPAAKKnn", "nnKKAAAKKWWKKAAAKKnn", "WnKKKKKKWWWWKKKKKKnW", "nWWKKKKWWppWWKKKKWWn", "nnKWKKKWWWWWWKKKWKnn", "nnnKKKKKWWWWKKKKKnnn", "nnnnKKKWWWWWWKKKnnnn", "nnnKKKKWWWWWWKKKKnnn", "nnKKKKKKWWWWKKKKKKnn", "nKKKKKKKWWWWKKKKKKKn", "nKKKKKKKKWWKKKKKKKKn", "nKKWWWKKKKKKKKWWWKKn", "NNWWWWNNNNNNNNWWWWNN"] },
-  { title:"橘猫 Mochi", year:"2026", desc:"小屋的主人（自封的）。\n喜欢趴在键盘上，帮忙写 bug。",
+  { title:"一只橘猫", year:"2026", desc:"一幅橘猫小像。\n圆脸、粉鼻子，看起来很好摸。",
     palette:{o:"#f2a65a",d:"#c46a2b",k:"#222034",w:"#fff",p:"#ff8fa3",b:"#7ec8e3"},
     pixels:["bbbbbbbbbbbb","bobbbbbbbobb","boobbbbboobb","bdooooooodbb","bokooooookbb","bowoopppowbb","booooooooobb","bbdooooodbbb","bboooooooobb","bboodbbdoobb","bbbbbbbbbbbb","bbbbbbbbbbbb"] },
   { title:"深海小鱼", year:"2026", desc:"在 2000 米水深游泳的小鱼。\n它不知道有个 ROV 正在看它。",
@@ -66,7 +62,7 @@ function phase(){const q=new URLSearchParams(location.search).get('phase');if(q=
 const items=[];
 function add(x,y,w,h,fn){items.push({x,y,w,h,fn})}
 
-/* 画廊布局：featured 放中间（大框），其余平均分到两侧，墙面 52..152 */
+/* 画廊布局：自动排在墙面 52..152 之间，等间距、底边对齐；featured:true 的会放在中间并用亮金色框 */
 function galleryLayout(){
  const feat=GALLERY.filter(g=>g.featured),rest=GALLERY.filter(g=>!g.featured);
  const half=Math.ceil(rest.length/2),order=[...rest.slice(0,half),...feat,...rest.slice(half)];
@@ -132,19 +128,16 @@ const POSE={
 };
 // b=肚皮/围兜, f=爪子
 const CATS=[
- {name:'Mochi',title:'🐱 Mochi',line:'喵~ 喵喵！\n（它看起来想要小鱼干）',say:'喵~',
-  pal:{o:"#f2a65a",d:"#c46a2b",k:"#222034",w:"#fff",p:"#ff8fa3",b:"#f2a65a",f:"#c46a2b"},x:120,y:99,dir:-1},
  {name:'Baxa',title:'🐈‍⬛ Baxa · 小屋的主人',line:'Baxa 是 Bao 家的长毛奶牛猫。\n黑色蓬松大毛毛 + 白围兜 + 四只白手套，\n琥珀色眼睛盯着你：“有罐罐吗？”',say:'喵?',
-  pal:{o:"#1e1b26",d:"#4a4560",k:"#f2b632",w:"#f4f1ea",p:"#e88a9a",b:"#f4f1ea",f:"#f4f1ea"},x:70,y:104,dir:1,fluffy:true},
+  pal:{o:"#1e1b26",d:"#4a4560",k:"#f2b632",w:"#f4f1ea",p:"#e88a9a",b:"#f4f1ea",f:"#f4f1ea"},x:100,y:102,dir:1,fluffy:true},
 ].map(c=>({v:0,state:'sit',t:0,dur:150+Math.random()*150,target:c.x,phase:0,meow:0,...c}));
 const FORCE=(new URLSearchParams(location.search)).get('cat'); // 调试：?cat=left / ?cat=right
 let cat=CATS[0],CP=cat.pal;
 function cpx(i,j,c){r(cat.dir>0?Math.round(cat.x)+i:Math.round(cat.x)+CW-1-i,cat.y+j,1,1,c)}
 function rows(a,oy){a.forEach((row,j)=>[...row].forEach((ch,i)=>{if(CP[ch])cpx(i,j+oy,CP[ch])}))}
-function others(){return CATS.filter(c=>c!==cat)}
 function pick(){
  const roll=Math.random();cat.t=0;
- if(roll<.55){cat.state='walk';let tx,n=0;do{tx=30+Math.random()*120;n++}while(n<30&&(Math.abs(tx-cat.x)<20||others().some(o=>Math.abs(tx-(o.state==='walk'?o.target:o.x))<22)));cat.target=tx}
+ if(roll<.55){cat.state='walk';let tx;do{tx=30+Math.random()*120}while(Math.abs(tx-cat.x)<20);cat.target=tx}
  else if(roll<.75){cat.state='groom';cat.dur=150+Math.random()*120}
  else if(roll<.88){cat.state='sleep';cat.dur=400+Math.random()*400}
  else{cat.state='sit';cat.dur=120+Math.random()*160;if(Math.random()<.6)cat.dir*=-1}
@@ -157,9 +150,7 @@ function updCat(f){
   cat.v+=(want-cat.v)*.06; cat.x+=cat.v; cat.phase+=Math.abs(cat.v)*.35;
   if(Math.abs(cat.v)>.02)cat.dir=Math.sign(cat.v);
   if(FORCE){if(cat.x<-16)cat.x=W;if(cat.x>W)cat.x=-16}
-  else if(Math.abs(dist)<.5&&Math.abs(cat.v)<.05){cat.v=0;cat.state='sit';cat.t=0;cat.dur=120+Math.random()*150;
-   // 停下时如果挨着另一只猫，就转身面对它（像在打招呼）
-   const o=others().find(o=>Math.abs(o.x-cat.x)<26);if(o)cat.dir=Math.sign(o.x-cat.x)||cat.dir}
+  else if(Math.abs(dist)<.5&&Math.abs(cat.v)<.05){cat.v=0;cat.state='sit';cat.t=0;cat.dur=120+Math.random()*150}
  }else if(cat.t>cat.dur&&!cat.meow)pick();
  const s=cat.state, blink=((f+(cat.fluffy?60:0))%170)<7;
  if(s==='walk'){
