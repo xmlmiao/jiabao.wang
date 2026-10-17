@@ -1,39 +1,63 @@
-# Bao 的像素小屋 · jiabao.wang
+# Bao 的像素小屋
 
-单文件静态站：`index.html`（无构建、无外部资源）。`CNAME` 用于 GitHub Pages 自定义域名。
+Vite + TypeScript + PixiJS，保留原来的 192×128 像素房间、居中标题、场景内像素对话框与四幅等大的画。HTML/CSS 负责文字和对话框，PixiJS 负责场景分层、猫咪、纸箱、道具、动态窗景和鼠标/触屏点击。
 
-房间里有一只会走动的长毛奶牛猫 **Baxa**（点它会喵），墙上挂着一排像素画，窗外会随本地时间变成白天 / 黄昏 / 夜晚。
+## 本地开发
 
-## 添加一幅新的像素画
+使用 Node.js 24：
 
-打开 `index.html`，找到 `const GALLERY = [`，追加一项：
-
-```js
-{ title:"作品名", year:"2026", desc:"点击后对话框里显示的介绍\n可以换行",
-  palette:{ a:"#ff0000", b:"#00ff00" },   // 一个字符 = 一种颜色
-  pixels:[                                // 每行一个字符串
-    "aaaaaaaaaaaa",
-    "abbbbbbbbbba",
-    ...
-  ] },
+```sh
+npm ci
+npm run dev
 ```
 
-- 每个字符一个像素；不在 palette 里的字符（如 `.`）是透明的。尺寸任意，常用 12×12。
-- **统一尺寸**：所有作品在墙上统一显示为 20×20 像素，含边框 24×24，自动排列在 x 52–152 之间，底边对齐，点击区域自动跟随。原始像素画尺寸可以不同。
-- **featured**（可选）：加 `featured:true` 的作品会排在正中间并用亮金色画框，尺寸仍与其他画相同。
-- 墙面宽约 100 像素，目前适合四幅统一尺寸的作品。图片作品可设置 `img`、`thumb` 和源图像素坐标 `crop:[x,y,w,h]`。毕业照墙上显示方形上半身取景，点开仍是完整原图。
-- 所有画共用原来的场景内像素对话框，显示完整作品及说明。点击 ◀ / ▶ 或键盘左右键循环切换，点击正文或图片关闭；不添加页面按钮栏。
+开发预览为 `http://127.0.0.1:4176`。
+
+```sh
+npm test
+npm run build
+npm run preview
+```
+
+生产构建输出到 `dist/`，生产包预览为 `http://127.0.0.1:4177`。构建前执行严格 TypeScript 检查；依赖版本由 `package-lock.json` 固定。
+
+## 代码结构
+
+| 文件 | 用途 |
+| --- | --- |
+| `src/main.ts` | 启动、缩放、减少动态效果偏好、页面可见性 |
+| `src/scene.ts` | PixiJS 场景与原生 pointer 点击区域、精灵及遮挡顺序 |
+| `src/room-art.ts` | 原房间像素绘图，按时段生成缓存纹理 |
+| `src/cat/model.ts` | 独立于渲染的 Baxa 状态、移动、进出小窝 |
+| `src/cat/atlas.ts` | 精灵图帧坐标、尺寸与位置对齐数据 |
+| `src/clock.ts` | 固定 60 Hz 时间步进，后台返回不追赶积压时间 |
+| `src/gallery.ts` | 画廊作品、预览资源与统一排列 |
+| `src/dialog.ts` | 原版打字对话框、画廊箭头及键盘翻页 |
+| `src/interactions.ts` | 房间物件点击区域和介绍文字 |
+| `src/styles.css` | 原版页面与像素对话框样式 |
+| `public/assets/` | 猫咪精灵、毕业照等静态素材 |
+
+原房间背景只在时段变化时生成纹理；猫、箱子前后壁、白爪、毛线球和窗景是独立的 PixiJS 对象。逻辑坐标和画布仍是 192×128，采用 nearest 取样、关闭抗锯齿，不拉伸猫的身体制造动作。动画图加载失败时显示简易猫兜底。
+
+## 画廊与交互
+
+编辑 `src/gallery.ts` 的 `GALLERY`。像素作品使用 `pixels` 字符串数组及 `palette`，图片作品使用 `img`、`thumb`，可选 `crop:[x,y,w,h]` 设置墙上取景。素材放在 `public/assets/gallery/`，数据路径写 `assets/gallery/文件名.png`。
+
+墙上统一为 20×20 像素，含框 24×24，目前排四幅。点开统一显示完整作品和说明，使用 ◀ / ▶ 或键盘左右键循环翻页，点击正文或图片关闭，Esc 退出。保持原来的场景交互，不增加页面按钮栏。
+
+Baxa 小窝固定在右侧地板，先走到箱子旁再钻进去，出窝后再活动；点箱子可叫它回窝。参考生成素材及提示词记录在 `public/assets/baxa/animation-atlas.md`，旧精灵保留作历史参考。
 
 ## 调试参数
 
-- `?phase=day|dusk|night` 强制窗外时间
-- `?cat=left|right` 让猫一直朝某个方向走（检查朝向）
-- `?cloud=edge` 把云固定在窗玻璃右缘（检查裁剪）
+- `?phase=day|dusk|night` 强制时段，默认按访客本地时间。
+- `?cat=left|right` 持续向指定方向走动。
+- `?cat=sit|stand|walk|lie|sleep|look|groom|play|back|box` 固定姿势；`box` 直接放在固定窝内。
+- `?cloud=edge` 检查窗边裁剪。
 
-## Baxa 动画与小窝
+## 发布
 
-保持原来的页面和场景内像素对话框，直接点击房间里的物件互动。猫咪使用固定时间步进、缓起缓停、姿势过渡、眨眼呼吸和独立的毛线球动画。右侧纸箱是固定小窝，Baxa 会先走到箱子旁再钻进去，出来时先走出小窝。点箱子可叫它回窝。
+GitHub Pages 使用 `.github/workflows/deploy.yml` 自动构建和发布 `dist/`，不再直接发布根目录源码。推送 main 后先安装锁定依赖、运行猫咪测试和 TypeScript 检查，再构建、上传并部署。无需外部服务器或部署密钥。
 
-当前使用参考图生成的 `assets/baxa/animation-atlas.png`，帧注册数据在 `index.html` 的 `ATLAS` 中。走路使用四帧，舔毛和玩球分别使用同姿势的三帧；不再交替不相关姿势或拉伸身体。纸箱已改为矮箱，头部与前爪分层遮挡。生成方式及原始提示词见 `assets/baxa/animation-atlas.md`。旧 18×14 素材保留作历史参考，不再由页面加载。
+自定义域名保持 `jiabao.wang`，根目录 `CNAME` 和用于输出的 `public/CNAME` 内容保持一致。Vite 的 `base` 为 `/`。不要提交 `node_modules`、`dist`、`.env`、token 或虚拟环境，不 force push。
 
-`?cat=sit|stand|walk|lie|sleep|look|groom|play|back|box` 查看各姿势；`?cat=box` 直接放在固定窝内。系统减少动态效果偏好仍受尊重。
+提交前本地检查 1280×800 和 390×844 截图、控制台、画廊翻页、触屏、对话框边界及猫咪小窝。迁移前后截图用于确认布局与像素画保持一致。

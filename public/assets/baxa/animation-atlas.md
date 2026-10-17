@@ -1,8 +1,8 @@
 # Baxa animation atlas
 
-Asset: `assets/baxa/animation-atlas.png` (1536×1024, RGBA).
+Asset: `public/assets/baxa/animation-atlas.png` (1536×1024, RGBA), published at `/assets/baxa/animation-atlas.png`.
 
-Created using the built-in image generation tool, with Bao's supplied Baxa pose sheet as the character reference. The original reference and graduation photo are not replaced. Source bounds, eye registration and ground alignment are recorded in `index.html` as `ATLAS`; the atlas is cropped at runtime with smoothing disabled. The fixed cardboard box remains canvas-native, separate from the cat.
+Created using the built-in image generation tool, with Bao's supplied Baxa pose sheet as the character reference. The original reference and graduation photo are not replaced. Source bounds, eye registration and ground alignment are recorded in `src/cat/atlas.ts` as `ATLAS`; the frames are registered at logical pixel size once with smoothing disabled, then rendered as PixiJS sprites. The fixed cardboard box is drawn into its own front/back textures, separate from the cat.
 
 ## Original generation prompt
 
