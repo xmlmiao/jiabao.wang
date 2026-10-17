@@ -56,7 +56,7 @@ function fit(){const pad=innerWidth<500?24:32,raw=Math.min((innerWidth-pad)/W,(i
 addEventListener('resize',fit);fit();
 
 /* ---- 时间：白天/黄昏/夜晚 ---- */
-function phase(){const h=new Date().getHours();return h>=6&&h<17?'day':h>=17&&h<19?'dusk':'night'}
+function phase(){const q=new URLSearchParams(location.search).get('phase');if(q==='day'||q==='dusk'||q==='night')return q;const h=new Date().getHours();return h>=6&&h<17?'day':h>=17&&h<19?'dusk':'night'}
 
 /* ---- 可点击物体 ---- */
 const items=[];
@@ -69,12 +69,19 @@ function drawRoom(f){
  r(0,84,W,6,'#4a3466');r(0,84,W,1,'#8a6aa8');
  // 地板
  r(0,90,W,38,'#a0663d');for(let y=90;y<H;y+=6){r(0,y,W,1,'#7d4a2a');for(let x=(y/6%2)*12;x<W;x+=24)r(x,y,1,6,'#7d4a2a')}
- // 窗户
+ // 窗户（天空内容裁剪在玻璃内，不会画到墙上）
  const sky={day:'#8fd3ff',dusk:'#ff9e6b',night:'#1a1f4a'}[ph];
- r(10,14,36,30,'#3a2a20');r(12,16,32,26,sky);
+ const wx=12,wy=16,ww=32,wh=26;
+ r(10,14,36,30,'#3a2a20');r(wx,wy,ww,wh,sky);
+ X.save();X.beginPath();X.rect(wx,wy,ww,wh);X.clip();
  if(ph==='night'){r(34,20,4,4,'#fff6c2');r(35,21,3,3,sky);[[16,20],[24,30],[40,34],[20,36],[28,22]].forEach(([a,b],i)=>{if((f>>4)+i&1)r(a,b,1,1,'#fff')})}
- else{r(ph==='day'?36:16,ph==='day'?20:32,5,5,ph==='day'?'#fff3a0':'#ffe08a');const cx=((f>>3)%48)-8;r(12+((cx+48)%40),24,8,2,'#fff');r(14+((cx+48)%40),23,4,1,'#fff')}
- r(27,16,2,26,'#3a2a20');r(12,28,32,2,'#3a2a20');r(8,43,40,3,'#5a3e2b');
+ else{r(ph==='day'?36:16,ph==='day'?20:32,5,5,ph==='day'?'#fff3a0':'#ffe08a');
+  // 云从左飘到右；?cloud=edge 强制贴右缘，方便截图验收
+  const force=new URLSearchParams(location.search).get('cloud');
+  const cx=force==='edge'?wx+ww-6:wx+((f>>3)%(ww+16))-8;
+  r(cx,24,8,2,'#fff');r(cx+2,23,4,1,'#fff')}
+ X.restore();
+ r(27,wy,2,wh,'#3a2a20');r(wx,28,ww,2,'#3a2a20');r(8,43,40,3,'#5a3e2b');
  // 窗台植物
  r(36,38,6,5,'#c0603a');r(37,34,1,4,'#4caf50');r(39,32,1,6,'#2e7d32');r(40,35,2,1,'#4caf50');r(35,36,2,1,'#4caf50');
  // 画廊
