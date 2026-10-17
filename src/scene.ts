@@ -1,7 +1,7 @@
 import { Application, Assets, Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
 import { ATLAS } from './cat/atlas';
 import type { CatController } from './cat/model';
-import { assetUrl } from './gallery';
+import { ART_SIZE, assetUrl, galleryLayout } from './gallery';
 import type { Hotspot } from './interactions';
 import { paintBox, paintRoom, pixelCanvas } from './room-art';
 import { BOX, CAT_HEIGHT, CAT_WIDTH, HEIGHT, WIDTH, type Phase } from './world';
@@ -18,13 +18,22 @@ function roomTint(color:number,phase:Phase){
 }
 export async function createScene(canvas:HTMLCanvasElement,hotspots:Hotspot[],onCat:()=>void,onEmpty:()=>void){
   const app=new Application();
-  await app.init({canvas,width:WIDTH,height:HEIGHT,autoStart:false,sharedTicker:false,antialias:false,roundPixels:true,resolution:1,autoDensity:false,backgroundAlpha:0,preference:'webgl',powerPreference:'low-power',eventFeatures:{move:true,globalMove:false,click:true,wheel:false}});
+  // Keep the room's 192x128 pixel grid, but give image covers enough display
+  // pixels to preserve faces rather than baking them into 20x20 textures.
+  await app.init({canvas,width:WIDTH,height:HEIGHT,autoStart:false,sharedTicker:false,antialias:false,roundPixels:true,resolution:6,autoDensity:false,backgroundAlpha:0,preference:'webgl',powerPreference:'low-power',eventFeatures:{move:true,globalMove:false,click:true,wheel:false}});
   app.stage.label='cottage';app.stage.eventMode='static';app.stage.hitArea=new Rectangle(0,0,WIDTH,HEIGHT);
   app.renderer.events.cursorStyles.default='default';
   canvas.style.touchAction='manipulation';
   const ownedTextures:Texture[]=[];
   const own=(texture:Texture)=>{ownedTextures.push(texture);return nearest(texture);};
   const sky=new Graphics({label:'window-sky'}),room=new Sprite({label:'room-artwork'}),cursor=new Graphics({label:'computer-cursor'}),flag=new Graphics({label:'mail-flag'});
+  const covers=new Container({label:'gallery-image-covers'});
+  for(const {g,x,y} of galleryLayout()){
+    if(!g.timg?.naturalWidth)continue;
+    const source=own(Texture.from(g.timg));
+    const texture=g.crop?own(new Texture({source:source.source,frame:new Rectangle(...g.crop)})):source;
+    covers.addChild(new Sprite({texture,x:x+2,y:y+2,width:ART_SIZE,height:ART_SIZE}));
+  }
   const boxBack=new Sprite({texture:own(Texture.from(paintBox(false))),label:'box-back',x:BOX.x,y:BOX.y});
   const boxFront=new Sprite({texture:own(Texture.from(paintBox(true))),label:'box-front',x:BOX.x,y:BOX.y});
   const bodyContainer=new Container({label:'baxa-body'}),body=new Sprite({label:'baxa-frame'});bodyContainer.addChild(body);
@@ -46,8 +55,8 @@ export async function createScene(canvas:HTMLCanvasElement,hotspots:Hotspot[],on
   const z=new Sprite({texture:own(Texture.from(pixelCanvas(5,7,ctx=>{ctx.fillStyle='#ede2ff';ctx.font='5px monospace';ctx.textBaseline='top';ctx.fillText('z',0,0);}))),label:'sleep-z'});
   const meow=new Sprite({texture:own(Texture.from(pixelCanvas(22,12,ctx=>{ctx.fillStyle='#302640';ctx.fillRect(0,0,22,10);ctx.fillRect(12,10,2,2);ctx.fillStyle='#fbf2df';ctx.fillRect(1,1,20,8);ctx.fillStyle='#302640';ctx.font='7px monospace';ctx.textBaseline='top';ctx.fillText('喵?',3,1);}))),label:'meow'});
   effects.addChild(ball,yarn,z,heart,meow);
-  app.stage.addChild(sky,room,cursor,flag,boxBack,bodyContainer,boxFront,paws,effects);
-  for(const layer of [sky,room,cursor,flag,boxBack,bodyContainer,boxFront,paws,effects])layer.eventMode='none';
+  app.stage.addChild(sky,room,covers,cursor,flag,boxBack,bodyContainer,boxFront,paws,effects);
+  for(const layer of [sky,room,covers,cursor,flag,boxBack,bodyContainer,boxFront,paws,effects])layer.eventMode='none';
   const hitLayer=new Container({label:'room-hotspots'});
   [...hotspots].sort((a,b)=>b.w*b.h-a.w*a.h).forEach(item=>{
     const hit=new Container({label:item.name});hit.hitArea=new Rectangle(item.x,item.y,item.w,item.h);hit.eventMode='static';hit.cursor='pointer';
@@ -62,20 +71,37 @@ export async function createScene(canvas:HTMLCanvasElement,hotspots:Hotspot[],on
     const cat=controller.cat,f=Math.floor(time*60),phaseChanged=phase!==previousPhase;
     if(phaseChanged){
       let texture=backgrounds.get(phase);if(!texture){texture=own(Texture.from(paintRoom(phase)));backgrounds.set(phase,texture);}room.texture=texture;previousPhase=phase;
+      boxBack.tint=boxFront.tint=phase==='night'?0xa5a0b4:phase==='dusk'?0xffdcc5:0xffffff;
+      bodyContainer.tint=paws.tint=phase==='night'?0xc6c6dc:phase==='dusk'?0xffead5:0xffffff;
+      covers.tint=phase==='night'?0xc0bfd2:phase==='dusk'?0xffeee0:0xffffff;
     }
     const skyFrame=f>>3;
     if(phaseChanged||skyFrame!==previousSkyFrame){
       previousSkyFrame=skyFrame;sky.clear();
-      const color={day:0x8fd3ff,dusk:0xff9e6b,night:0x1a1f4a}[phase];sky.rect(12,16,32,26).fill(color);
+      const color={day:0x9ccedc,dusk:0xd38e8e,night:0x252e52}[phase];sky.rect(12,16,32,26).fill(color);
+      sky.rect(12,32,32,10).fill({day:0xc8e0d8,dusk:0xf2bc94,night:0x384368}[phase]);
+      sky.rect(12,39,32,3).fill({day:0x91b6a4,dusk:0x9c8896,night:0x242e4c}[phase]);
+      sky.rect(12,38,7,4).rect(19,40,9,2).rect(37,37,7,5).fill({day:0x789d91,dusk:0x7e758d,night:0x20283f}[phase]);
       if(phase==='night'){
-        sky.rect(34,20,4,4).fill(0xfff6c2).rect(35,21,3,3).fill(color);
-        [[16,20],[24,30],[40,34],[20,36],[28,22]].forEach(([x,y],i)=>{if(((f>>4)+i)&1)sky.rect(x,y,1,1).fill(0xffffff);});
+        // A stepped crescent opening toward the upper right.
+        sky.rect(35,19,2,1).rect(34,20,1,3).rect(35,23,1,1)
+          .rect(36,24,3,1).rect(39,22,1,2).fill(0xfff0bd);
+        // Stars stay visible. Once per 12 seconds, one gently brightens
+        // for 1.8 seconds; successive pulses move around the window.
+        const pulseCycle=Math.floor(time/12),pulseTime=time%12;
+        const pulse=!reducedMotion&&pulseTime>=8&&pulseTime<9.8
+          ?Math.sin((pulseTime-8)/1.8*Math.PI):0;
+        [[16,20],[24,30],[40,34],[20,36],[30,22]].forEach(([x,y],i)=>{
+          const glow=i===pulseCycle%5?pulse:0;
+          sky.rect(x,y,1,1).fill({color:0xf5efdb,alpha:.66+.34*glow});
+        });
       }else{
         sky.rect(phase==='day'?36:16,phase==='day'?20:32,5,5).fill(phase==='day'?0xfff3a0:0xffe08a);
-        const x=cloudEdge?38:12+((f>>3)%48)-8;sky.rect(x,24,8,2).fill(0xffffff).rect(x+2,23,4,1).fill(0xffffff);
+        const x=cloudEdge?38:12+((f>>3)%48)-8;sky.rect(x,24,8,2).fill(phase==='day'?0xf3f2df:0xf6d4b6).rect(x+2,23,4,1).fill(phase==='day'?0xf3f2df:0xf6d4b6);
       }
     }
-    const cursorFrame=(f>>4)&1;
+    // A relaxed 1.8-second cycle, visible for the first 1.1 seconds.
+    const cursorFrame=reducedMotion||time%1.8<1.1?1:0;
     if(phaseChanged||cursorFrame!==previousCursor){previousCursor=cursorFrame;cursor.clear();if(cursorFrame)cursor.rect(79,59,2,1).fill(roomTint(0xffffff,phase));}
     const flagFrame=(f>>5)&1;
     if(phaseChanged||flagFrame!==previousFlag){previousFlag=flagFrame;flag.clear().rect(28,62,4,3).fill(roomTint(flagFrame?0xffd25a:0xf2c94c,phase));}

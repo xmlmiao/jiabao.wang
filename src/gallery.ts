@@ -8,11 +8,10 @@ export const GALLERY:Artwork[] = [
   { title:"小 ROV", year:"2026", desc:"向本职工作致敬：一台小小的水下机器人。\nSTM32 + RTOS 驱动，螺旋桨呼呼转。",
     palette:{n:"#0f2a4a",y:"#ffcc33",k:"#222034",c:"#9fe8ff",g:"#8b93a6",w:"#e8f6ff"},
     pixels:["nnnnnnnnnnnn","nnnnnwnnnnnn","nnnnnggnnnnn","nnyyyyyyyynn","nykyyyyyykyn","nyycccyyyyyn","ncwcycyyyyyn","nyycccyyyyyn","nykyyyyyykyn","nnyyyyyyyynn","ngnggnnggngn","nnnnnnnnnnnn"] },
-  { title:"窗台绿萝", year:"2026", desc:"唯一一个不需要烧录固件\n就能自己长大的东西。",
-    palette:{e:"#f3e2c7",g:"#4caf50",G:"#2e7d32",t:"#c0603a",T:"#8a3d22"},
-    pixels:["eeeeeeeeeeee","eeeeegeeeeee","eeegGgegeeee","eegGgggGgeee","eeeGgGgggGee","eegggGgGgeee","eeeGgggGeeee","eeeettttteee","eeeetTTTteee","eeeetttteeee","eeeeTTTTeeee","eeeeeeeeeeee"] },
+  { title:"夕阳下的我们", year:"", desc:"松花江畔，落日余晖，靠在一起的我们，Bao&Ana",
+    img:"assets/gallery/sunset-couple-detail-v2.png", thumb:"assets/gallery/sunset-couple-cover.png", crop:[68,112,1118,1118] },
   { title:"毕业典礼", year:"", desc:"2026年6月24号毕业典礼，Bao和胶哥在北体激情比心❤",
-    img:"assets/gallery/grad-2026.png", thumb:"assets/gallery/grad-2026-cover-v2.png" },
+    img:"assets/gallery/grad-2026-detail-selected.png", thumb:"assets/gallery/grad-2026-cover-selected.png" },
 ];
 export const ART_SIZE=20;
 export async function prepareGallery(){
