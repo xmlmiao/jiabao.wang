@@ -15,8 +15,9 @@ h1 small{display:block;font-size:12px;color:#9aa3c7;letter-spacing:1px;margin-to
 #stage{position:relative;border:4px solid #000;box-shadow:0 0 0 4px #5a4a78,0 0 0 8px #000,8px 12px 0 8px rgba(0,0,0,.35)}
 canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer}
 #dlg{position:absolute;left:8px;right:8px;bottom:8px;background:#fdf6e3;color:#2b2140;border:4px solid #2b2140;box-shadow:inset -4px -4px 0 #d8c9a3,inset 4px 4px 0 #fff,4px 4px 0 rgba(0,0,0,.4);padding:12px 14px 14px;font-size:14px;line-height:1.7;display:none;white-space:pre-line;cursor:pointer}
+#dlg{max-height:calc(100% - 16px);overflow-y:auto;overscroll-behavior:contain;overflow-wrap:anywhere}
 #dlg.top{bottom:auto;top:8px}
-#dlg img{display:block;max-width:min(100%,260px);max-height:45vh;image-rendering:pixelated;margin:6px auto 0;border:3px solid #2b2140}
+#dlg img{display:block;max-width:min(100%,260px);max-height:min(45vh,max(48px,calc(var(--scene-height) - 152px)));image-rendering:pixelated;margin:6px auto 0;border:3px solid #2b2140}
 #dlg b{display:inline-block;background:#2b2140;color:#fdf6e3;padding:0 6px;margin-bottom:4px}
 #dlg:after{content:"▼";position:absolute;right:10px;bottom:4px;font-size:10px;animation:bl 1s steps(2) infinite}
 @keyframes bl{50%{opacity:0}}
@@ -58,7 +59,7 @@ const r=(x,y,w,h,c)=>{X.fillStyle=c;X.fillRect(x,y,w,h)};
 function sprite(px,pal,x,y,flip){px.forEach((row,j)=>{[...row].forEach((ch,i)=>{if(ch!=='.'&&pal[ch]){r(flip?x+row.length-1-i:x+i,y+j,1,1,pal[ch])}})})}
 
 /* ---- 缩放：保持整数倍 ---- */
-function fit(){const pad=innerWidth<500?24:32,raw=Math.min((innerWidth-pad)/W,(innerHeight-150)/H,6);let s=Math.floor(raw);if(s<2)s=Math.max(1,(innerWidth-pad)/W);/* 窄屏允许非整数倍，保证占满宽度 */C.style.width=W*s+'px';C.style.height=H*s+'px';dlg.style.fontSize=(s<=2?12:14)+'px'}
+function fit(){const pad=innerWidth<500?24:32,raw=Math.min((innerWidth-pad)/W,(innerHeight-150)/H,6);let s=Math.floor(raw);if(s<2)s=Math.max(1,(innerWidth-pad)/W);/* 窄屏允许非整数倍，保证占满宽度 */C.style.width=W*s+'px';C.style.height=H*s+'px';stage.style.setProperty('--scene-height',H*s+'px');dlg.style.fontSize=(s<=2?12:14)+'px'}
 addEventListener('resize',fit);fit();
 
 /* ---- 时间：白天/黄昏/夜晚 ---- */
@@ -155,7 +156,16 @@ function updCat(f){
  }else if(cat.t>cat.dur&&!cat.meow)pick();
  const s=cat.meow>0?'look':cat.state, flip=cat.dir<0;
  if(s==='walk'){frame(Math.floor(cat.phase)%2?'stand':'walk',flip)}
- else frame(s,flip)
+ else frame(s,flip);
+ // 小道具独立于 18x14 猫精灵绘制，避免缩小后糊成一个点。
+ if(s==='play'){
+  const bx=Math.round(cat.x)+(flip?-9:SW+2),by=cat.foot-7+((f>>4)&1);
+  sprite(['..kkkk..','.kppppk.','kppwpppk','kpwpwppk','kppwpwpk','.kppppk.','..kkkk..'],{k:'#47243d',p:'#ff86b3',w:'#ffe0ec'},bx,by);
+  r(bx+(flip?8:-3),by+5,3,1,'#ffe0ec');r(bx+(flip?10:-4),by+4,1,2,'#ffe0ec');
+ }
+ if(s==='groom'||cat.meow>0){
+  sprite(['.kk.kk.','kppkppk','kpppppk','.kpppk.','..kpk..','...k...'],{k:'#47243d',p:'#ff86b3'},Math.round(cat.x)+(cat.meow>0?SW+12:5),cat.foot-SH-9-((f>>5)&1));
+ }
  if(cat.meow>0){cat.meow--;const bx=Math.round(cat.x)+4,by=cat.foot-SH-12;r(bx,by,22,10,'#222034');r(bx+1,by+1,20,8,'#fff');r(bx+5,by+10,2,2,'#222034');
    X.fillStyle='#222034';X.font='7px monospace';X.textBaseline='top';X.fillText(cat.say,bx+3,by+1)}
 }
