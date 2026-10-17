@@ -27,6 +27,6 @@ export function galleryLayout(){
  const half=Math.ceil(rest.length/2),order=[...rest.slice(0,half),...feat,...rest.slice(half)];
  const dims=order.map(g=>({g,w:ART_SIZE+4,h:ART_SIZE+4}));
  const L=52,R=152,total=dims.reduce((a,d)=>a+d.w,0),gap=Math.max(1,Math.floor((R-L-total)/Math.max(1,dims.length-1)));
- let x=L+Math.floor((R-L-total-gap*(dims.length-1))/2);const base=32;
- return dims.map(d=>{const o={...d,x,y:base-d.h};x+=d.w+gap;return o});
+ let x=L+Math.floor((R-L-total-gap*(dims.length-1))/2);const top=14;
+ return dims.map(d=>{const o={...d,x,y:top};x+=d.w+gap;return o});
 }
