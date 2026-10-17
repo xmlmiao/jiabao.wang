@@ -12,7 +12,7 @@ export const GALLERY:Artwork[] = [
     palette:{e:"#f3e2c7",g:"#4caf50",G:"#2e7d32",t:"#c0603a",T:"#8a3d22"},
     pixels:["eeeeeeeeeeee","eeeeegeeeeee","eeegGgegeeee","eegGgggGgeee","eeeGgGgggGee","eegggGgGgeee","eeeGgggGeeee","eeeettttteee","eeeetTTTteee","eeeetttteeee","eeeeTTTTeeee","eeeeeeeeeeee"] },
   { title:"毕业典礼", year:"", desc:"2026年6月24号毕业典礼，Bao和胶哥在北体激情比心❤",
-    img:"assets/gallery/grad-2026.png", thumb:"assets/gallery/grad-2026-cover.png" },
+    img:"assets/gallery/grad-2026.png", thumb:"assets/gallery/grad-2026-cover-v2.png" },
 ];
 export const ART_SIZE=20;
 export async function prepareGallery(){
