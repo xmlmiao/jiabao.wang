@@ -3,11 +3,12 @@ export const POSES=['sit','stand','walk','lie','sleep','look','groom','play','ba
 export type PublicPose=typeof POSES[number];
 export type CatPose=PublicPose|'crouch';
 export type Arrival='sit'|'box'|'play';
-export interface CatState {x:number;foot:number;dir:number;v:number;target:number;state:CatPose;elapsed:number;duration:number;next:CatPose|CatPose[]|null;arrival:Arrival;stride:number;meow:number;reactElapsed:number}
+export type Reaction='hello'|'purr'|'paw'|'sleepy';
+export interface CatState {x:number;foot:number;dir:number;v:number;target:number;state:CatPose;elapsed:number;duration:number;next:CatPose|CatPose[]|null;arrival:Arrival;stride:number;meow:number;reactElapsed:number;reaction:Reaction;pets:number}
 export function isPose(value:unknown):value is PublicPose{return typeof value==='string'&&POSES.includes(value as PublicPose)}
 export function createCatController(forcedQuery:string|null=null,rng:()=>number=Math.random){
 const FORCE=forcedQuery==='left'||forcedQuery==='right'||isPose(forcedQuery)?forcedQuery:null;
-const cat:CatState={x:100,foot:114,dir:1,v:0,target:100,state:'sit',elapsed:0,duration:3,next:null,arrival:'sit',stride:0,meow:0,reactElapsed:0};
+const cat:CatState={x:100,foot:114,dir:1,v:0,target:100,state:'sit',elapsed:0,duration:4,next:null,arrival:'sit',stride:0,meow:0,reactElapsed:0,reaction:'hello',pets:0};
 const random=(lo:number,hi:number)=>lo+rng()*(hi-lo);
 function enter(state:CatPose,duration:number,next:CatPose|CatPose[]|null=null){cat.state=state;cat.elapsed=0;cat.duration=duration;cat.next=next;cat.foot=state==='box'?BOX.foot:114;if(state==='box'){cat.x=BOX.catX;cat.v=0}}
 function goHome(){
@@ -40,8 +41,15 @@ function pick(){
  }
 }
 
+function stepReaction(dt:number){
+ if(cat.meow>0){
+  cat.meow=Math.max(0,cat.meow-dt);cat.reactElapsed+=dt;
+  // Let a walking cat settle on all four paws before sitting to greet.
+  if(cat.state==='stand'&&cat.reactElapsed>=.35)enter('sit',4);
+ }
+}
 function stepCat(dt:number){
- if(cat.meow>0){cat.meow=Math.max(0,cat.meow-dt);cat.reactElapsed+=dt;if(!cat.meow)return}
+ if(cat.meow>0){stepReaction(dt);return;}
  const forcedWalk=FORCE==='left'||FORCE==='right';
  if(forcedWalk){if(cat.state!=='walk')enter('walk',Infinity);cat.dir=FORCE==='left'?-1:1;cat.target=cat.x+cat.dir*50}
  else if(isPose(FORCE)){if(cat.state!==FORCE)enter(FORCE,Infinity);cat.elapsed+=dt;return}
@@ -65,6 +73,15 @@ function stepCat(dt:number){
 }
 function frameIndex(name:CatPose,worldTime:number,reducedMotion:boolean){
  const t=cat.elapsed,blink=!reducedMotion&&worldTime%5.2>5.04;
+ if(cat.meow>0&&!reducedMotion){
+  const slowBlink=cat.reactElapsed>.65&&cat.reactElapsed<1.15;
+  if(name==='box')return slowBlink?22:21;
+  if(name==='look')return slowBlink?5:4;
+  if(name==='sit'){
+   if(cat.reaction==='paw'&&cat.reactElapsed>.45&&cat.reactElapsed<1.6)return cat.reactElapsed<1?14:16;
+   return slowBlink?1:0;
+  }
+ }
  if(name==='sit')return blink?1:0;
  if(name==='stand')return 2;
  if(name==='look')return blink?5:4;
@@ -72,14 +89,23 @@ function frameIndex(name:CatPose,worldTime:number,reducedMotion:boolean){
  if(name==='crouch')return 10;
  if(name==='lie')return 11;
  if(name==='sleep')return 12+(reducedMotion?0:Math.floor(t/2.2)%2);
- if(name==='groom')return [14,15,16,15][Math.floor(t*3.5)%4];
+ if(name==='groom')return [14,15,16,15][Math.floor(t*2.5)%4];
  if(name==='back')return 17;
- if(name==='play')return [18,19,20,19][Math.floor(t*4)%4];
+ if(name==='play')return [18,19,20,19][Math.floor(t*3)%4];
  if(name==='box')return blink?22:Math.floor(t/2.8)%2?23:21;
  return 0;
 }
-function greetCat(){const atHome=cat.state==='box';cat.v=0;cat.meow=2.4;cat.reactElapsed=0;if(atHome){cat.elapsed=0;cat.duration=10}else enter('sit',3);}
+function greetCat(){
+ // Repeated tapping during a response must not restart it indefinitely.
+ if(cat.meow>0)return;
+ const previous=cat.state;
+ cat.reaction=previous==='sleep'?'sleepy':(['hello','purr','paw'] as const)[cat.pets%3];
+ cat.pets++;cat.v=0;cat.meow=3.2;cat.reactElapsed=0;
+ if(previous==='box'){cat.elapsed=0;cat.duration=10;}
+ else if(previous==='sleep'||previous==='lie'){cat.elapsed=0;cat.duration=8;}
+ else enter(previous==='walk'?'stand':'sit',4);
+}
 if(isPose(FORCE))enter(FORCE,Infinity);
-return {cat,enter,goHome,leaveHome,step:stepCat,frameIndex,greet:greetCat};
+return {cat,enter,goHome,leaveHome,step:stepCat,stepReaction,frameIndex,greet:greetCat};
 }
 export type CatController=ReturnType<typeof createCatController>;

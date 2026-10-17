@@ -32,6 +32,30 @@ describe('Baxa simulation',()=>{
   it('honors all public pose parameters',()=>{
     for(const pose of POSES){const model=createCatController(pose);for(let i=0;i<120;i++)model.step(1/60);expect(model.cat.state).toBe(pose);if(pose==='box')expect(model.cat.x).toBe(BOX.catX);}
   });
+  it('settles a walking cat before greeting without moving its feet',()=>{
+    const model=createCatController();model.cat.x=42;model.enter('walk',Infinity);model.greet();
+    expect(model.cat.state).toBe('stand');model.step(.4);
+    expect(model.cat.state).toBe('sit');expect(model.cat.x).toBe(42);
+    model.step(3);expect(model.cat.meow).toBe(0);
+    model.step(1/60);expect(Number.isFinite(model.cat.x)).toBe(true);
+  });
+  it('lets a sleeping cat respond without abruptly standing up',()=>{
+    const model=createCatController();model.enter('sleep',12);model.greet();model.step(.8);
+    expect(model.cat.state).toBe('sleep');expect(model.cat.reaction).toBe('sleepy');
+  });
+  it('cycles responses and ignores repeated tapping during one response',()=>{
+    const model=createCatController();
+    for(const reaction of ['hello','purr','paw']){
+      model.greet();expect(model.cat.reaction).toBe(reaction);model.step(.8);
+      const remaining=model.cat.meow;model.greet();expect(model.cat.meow).toBe(remaining);
+      model.step(3.3);expect(model.cat.meow).toBe(0);
+    }
+  });
+  it('expires feedback with reduced motion without starting idle movement',()=>{
+    const model=createCatController();model.greet();const x=model.cat.x;
+    for(let i=0;i<240;i++)model.stepReaction(1/60);
+    expect(model.cat.meow).toBe(0);expect(model.cat.x).toBe(x);expect(model.cat.state).toBe('sit');
+  });
   it('ignores an unknown pose instead of freezing transitions',()=>{
     const a=createCatController('typo',()=>.2),b=createCatController(null,()=>.2);
     for(let i=0;i<600;i++){a.step(1/60);b.step(1/60);}

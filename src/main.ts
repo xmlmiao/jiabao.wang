@@ -19,7 +19,10 @@ async function start(){
   document.addEventListener('visibilitychange',()=>{clock.reset();fresh=true;},{signal:events.signal});
   motion.addEventListener('change',()=>{clock.reset();fresh=true;},{signal:events.signal});
   scene.app.ticker.add(ticker=>{
-    if(document.hidden||motion.matches){clock.reset();fresh=true;}
+    if(document.hidden||motion.matches){
+      clock.reset();fresh=true;
+      if(!document.hidden&&motion.matches)controller.stepReaction(Math.min(ticker.elapsedMS/1000,.1));
+    }
     else if(fresh)fresh=false;
     else clock.advance(ticker.elapsedMS,controller.step);
     scene.update(controller,clock.time,phase(),motion.matches,search.get('cloud')==='edge');

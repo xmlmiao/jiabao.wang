@@ -43,7 +43,7 @@ export async function createScene(canvas:HTMLCanvasElement,hotspots:Hotspot[],on
   // Register each frame at its logical pixel size once. This preserves the
   // previous Canvas 2D sampling (especially single-pixel eyes) on every GPU.
   const resource=atlas?.source.resource as CanvasImageSource|undefined;
-  const frames=resource?ATLAS.map(m=>own(Texture.from(pixelCanvas(m.w,m.h,ctx=>ctx.drawImage(resource,m.sx,m.sy,m.sw,m.sh,0,0,m.w,m.h))))):[];
+  const frames=resource?ATLAS.map(m=>own(Texture.from(pixelCanvas(m.w*2,m.h*2,ctx=>ctx.drawImage(resource,m.sx,m.sy,m.sw,m.sh,0,0,m.w*2,m.h*2))))):[];
   if(resource){const m=ATLAS[21];paws.texture=own(Texture.from(pixelCanvas(m.w,2,ctx=>ctx.drawImage(resource,m.sx,m.sy+m.sh-24,m.sw,24,0,0,m.w,2))));}
   const fallback=own(Texture.from(pixelCanvas(CAT_WIDTH,CAT_HEIGHT,ctx=>{
     ctx.fillStyle='#231f29';ctx.fillRect(6,10,12,10);ctx.fillRect(7,8,3,3);ctx.fillRect(14,8,3,3);ctx.fillStyle='#ece1d4';ctx.fillRect(10,15,6,5);
@@ -53,10 +53,18 @@ export async function createScene(canvas:HTMLCanvasElement,hotspots:Hotspot[],on
   const yarn=new Graphics({label:'yarn-thread'});
   const heart=new Sprite({texture:own(pixelTexture(HEART,{k:'#47243d',p:'#ff86b3'})),label:'heart'});
   const z=new Sprite({texture:own(Texture.from(pixelCanvas(5,7,ctx=>{ctx.fillStyle='#ede2ff';ctx.font='5px monospace';ctx.textBaseline='top';ctx.fillText('z',0,0);}))),label:'sleep-z'});
-  const meow=new Sprite({texture:own(Texture.from(pixelCanvas(22,12,ctx=>{ctx.fillStyle='#302640';ctx.fillRect(0,0,22,10);ctx.fillRect(12,10,2,2);ctx.fillStyle='#fbf2df';ctx.fillRect(1,1,20,8);ctx.fillStyle='#302640';ctx.font='7px monospace';ctx.textBaseline='top';ctx.fillText('喵?',3,1);}))),label:'meow'});
+  const responses=new Map<string,Texture>();
+  for(const text of ['喵～你好呀','呼噜噜…','摸摸我的爪','再睡一会…','小窝好暖～']){
+    responses.set(text,own(Texture.from(pixelCanvas(88,28,ctx=>{
+      ctx.scale(2,2);ctx.fillStyle='#483448';ctx.fillRect(0,0,44,12);ctx.fillRect(19,12,3,2);
+      ctx.fillStyle='#fff3d9';ctx.fillRect(1,1,42,10);ctx.fillStyle='#483448';ctx.font='7px "Microsoft YaHei",sans-serif';ctx.textBaseline='middle';ctx.textAlign='center';ctx.fillText(text,22,6);
+    }))));
+  }
+  const meow=new Sprite({texture:responses.get('喵～你好呀')!,label:'meow',width:44,height:14});
+  const shadow=new Graphics({label:'baxa-ground-shadow'});
   effects.addChild(ball,yarn,z,heart,meow);
-  app.stage.addChild(sky,room,covers,cursor,flag,boxBack,bodyContainer,boxFront,paws,effects);
-  for(const layer of [sky,room,covers,cursor,flag,boxBack,bodyContainer,boxFront,paws,effects])layer.eventMode='none';
+  app.stage.addChild(sky,room,covers,cursor,flag,shadow,boxBack,bodyContainer,boxFront,paws,effects);
+  for(const layer of [sky,room,covers,cursor,flag,shadow,boxBack,bodyContainer,boxFront,paws,effects])layer.eventMode='none';
   const hitLayer=new Container({label:'room-hotspots'});
   [...hotspots].sort((a,b)=>b.w*b.h-a.w*a.h).forEach(item=>{
     const hit=new Container({label:item.name});hit.hitArea=new Rectangle(item.x,item.y,item.w,item.h);hit.eventMode='static';hit.cursor='pointer';
@@ -105,8 +113,13 @@ export async function createScene(canvas:HTMLCanvasElement,hotspots:Hotspot[],on
     if(phaseChanged||cursorFrame!==previousCursor){previousCursor=cursorFrame;cursor.clear();if(cursorFrame)cursor.rect(79,59,2,1).fill(roomTint(0xffffff,phase));}
     const flagFrame=(f>>5)&1;
     if(phaseChanged||flagFrame!==previousFlag){previousFlag=flagFrame;flag.clear().rect(28,62,4,3).fill(roomTint(flagFrame?0xffd25a:0xf2c94c,phase));}
-    const pose=cat.state==='box'?'box':cat.meow>0?'look':cat.state,flip=pose!=='box'&&cat.dir<0;
-    bodyContainer.position.set(Math.round(cat.x)+(flip?CAT_WIDTH:0),pose==='box'?BOX.rim+1:cat.foot);bodyContainer.scale.x=flip?-1:1;
+    const reacting=cat.meow>0;
+    const pose=reacting&&cat.state==='sit'&&cat.reaction==='hello'?'look':cat.state,flip=pose!=='box'&&cat.dir<0;
+    const size=pose==='box'?1:1.12;
+    bodyContainer.position.set(Math.round(cat.x)+(flip?CAT_WIDTH:0),pose==='box'?BOX.rim+1:cat.foot);
+    bodyContainer.scale.set(flip?-size:size,size);
+    shadow.visible=pose!=='box';shadow.clear();
+    if(shadow.visible)shadow.rect(Math.round(cat.x)+5,cat.foot-1,17,2).fill({color:0x241f31,alpha:.18}).rect(Math.round(cat.x)+8,cat.foot+1,11,1).fill({color:0x241f31,alpha:.1});
     const index=controller.frameIndex(pose,time,reducedMotion),m=ATLAS[index];
     if(atlas){body.texture=frames[index];body.position.set(m.dx,-m.h);body.width=m.w;body.height=m.h;}
     else{body.texture=fallback;body.position.set(0,-CAT_HEIGHT);body.width=CAT_WIDTH;body.height=CAT_HEIGHT;}
@@ -120,8 +133,17 @@ export async function createScene(canvas:HTMLCanvasElement,hotspots:Hotspot[],on
       yarn.clear().rect(bx+(flip?8:-3),by+5,3,1).rect(bx+(flip?10:-4),by+4,1,2).fill(0xffe0ec);
     }
     z.visible=pose==='sleep';if(z.visible)z.position.set(Math.round(cat.x)+CAT_WIDTH-2,cat.foot-CAT_HEIGHT-5-(reducedMotion?0:Math.floor(time%2.4)));
-    heart.visible=meow.visible=cat.meow>0;
-    if(cat.meow>0){heart.position.set(Math.max(2,Math.min(WIDTH-9,Math.round(cat.x)+CAT_WIDTH+7)),cat.foot-CAT_HEIGHT-9-Math.min(4,Math.floor(cat.reactElapsed*2)));meow.position.set(Math.max(2,Math.min(WIDTH-25,Math.round(cat.x)-9)),cat.foot-CAT_HEIGHT-13);}
+    meow.visible=reacting;heart.visible=reacting&&cat.reaction!=='sleepy';
+    if(reacting){
+      const lift=reducedMotion?0:Math.min(3,Math.floor(cat.reactElapsed*1.5));
+      const opacity=reducedMotion?1:Math.min(1,cat.reactElapsed/.15,cat.meow/.4);
+      meow.alpha=heart.alpha=opacity;
+      const text=cat.state==='box'?'小窝好暖～':{hello:'喵～你好呀',purr:'呼噜噜…',paw:'摸摸我的爪',sleepy:'再睡一会…'}[cat.reaction];
+      meow.texture=responses.get(text)!;meow.width=44;meow.height=14;
+      const headTop=pose==='box'?BOX.rim-10:cat.foot-m.h*size;
+      meow.position.set(Math.max(2,Math.min(WIDTH-46,Math.round(cat.x)-10)),headTop-18-lift);
+      heart.position.set(Math.max(2,Math.min(WIDTH-9,Math.round(cat.x)+CAT_WIDTH+4)),headTop-5-lift);
+    }
   }
   canvas.dataset.renderer='pixi-webgl';
   return {app,update,destroy(){app.destroy(false,{children:true});ownedTextures.forEach(t=>t.destroy(false));if(atlas)Assets.unload(assetUrl('assets/baxa/animation-atlas.png'));}};

@@ -18,6 +18,6 @@ export function roomHotspots(dialog:CottageDialog,cat:CatController,phase:()=>Ph
   ];
 }
 export function greetBaxa(controller:CatController,dialog:CottageDialog){
+  dialog.close();
   controller.greet();
-  dialog.say('🐈‍⬛ Baxa · 小屋的主人','Baxa 是 Bao 家的长毛奶牛猫。\n黑色蓬松大毛毛 + 白围兜 + 四只白手套，\n眼睛盯着你：“有罐罐吗？”',true);
 }
