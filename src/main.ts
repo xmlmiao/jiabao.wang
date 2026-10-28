@@ -10,7 +10,7 @@ async function start(){
   const canvas=document.querySelector<HTMLCanvasElement>('#c')!,stage=document.querySelector<HTMLDivElement>('#stage')!,element=document.querySelector<HTMLDivElement>('#dlg')!;
   const search=new URLSearchParams(location.search),motion=matchMedia('(prefers-reduced-motion: reduce)'),events=new AbortController();
   const dialog=createDialog(element),controller=createCatController(search.get('cat')),clock=new FixedClock();
-  function fit(){const pad=innerWidth<500?24:32,raw=Math.min((innerWidth-pad)/WIDTH,(innerHeight-150)/HEIGHT,6);let scale=Math.floor(raw);if(scale<2)scale=Math.max(1,(innerWidth-pad)/WIDTH);canvas.style.width=WIDTH*scale+'px';canvas.style.height=HEIGHT*scale+'px';stage.style.setProperty('--scene-height',HEIGHT*scale+'px');element.style.fontSize=(scale<=2?12:14)+'px';}
+  function fit(){const pad=innerWidth<500?24:32,scale=Math.max(1,Math.min((innerWidth-pad)/WIDTH,(innerHeight-150)/HEIGHT,6));canvas.style.width=WIDTH*scale+'px';canvas.style.height=HEIGHT*scale+'px';stage.style.setProperty('--scene-height',HEIGHT*scale+'px');element.style.fontSize=(scale<2.2?12:14)+'px';}
   fit();addEventListener('resize',fit,{signal:events.signal});
   await prepareGallery();
   const phase=()=>getPhase(search);
