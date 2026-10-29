@@ -37,12 +37,6 @@ export function paintRoom(ph:Phase){return pixelCanvas(W,H,X=>{
  galleryLayout().forEach(({g,x,y,w,h})=>{r(x+1,y+2,w,h,'#24213345');r(x,y,w,h,'#443341');r(x+1,y+1,w-2,h-2,'#c49a60');r(x+1,y+1,w-2,1,'#f0d39a');r(x+1,y+1,1,h-2,'#dfbb7d');r(x+2,y+h-2,w-3,1,'#8c623e');
  if(g.timg?.naturalWidth){if(g.crop)X.drawImage(g.timg,...g.crop,x+2,y+2,ART_SIZE,ART_SIZE);else X.drawImage(g.timg,x+2,y+2,ART_SIZE,ART_SIZE)}else if(g.preview)X.drawImage(g.preview,x+2,y+2,ART_SIZE,ART_SIZE);
  });
- // Public guestbook mailbox, freestanding pixel postbox.
- r(139,98,8,2,'#24213338');r(140,77,2,22,'#a88962');r(142,77,1,22,'#705747');
- r(134,63,16,14,'#6d3d4c');r(134,63,15,14,'#a65360');
- r(134,63,15,1,'#d78e88');r(135,64,14,1,'#bd7476');
- r(136,67,10,2,'#693e49');r(136,68,10,1,'#d3918a');r(144,73,4,2,'#d6b58a');
- r(148,60,2,9,'#75505c');r(150,60,4,3,'#d4b15a');
  // Bookshelf: inset back, lit edges, labeled spines, varied heights.
  r(156,34,30,56,'#674b3d');r(156,34,30,1,'#b08b64');r(157,35,1,54,'#967252');r(158,36,26,52,'#382f32');r(184,35,2,55,'#4e3b35');
  const bc=['#be7775','#7aabb1','#d6b66e','#839b77','#a48aa9','#c78c64'];
