@@ -1,4 +1,5 @@
 import { galleryLayout } from './gallery';
+import { openGuestbook } from './guestbook';
 import { BOX, type Phase } from './world';
 import type { CatController } from './cat/model';
 import type { CottageDialog } from './dialog';
@@ -7,6 +8,7 @@ export interface Hotspot {name:string;x:number;y:number;w:number;h:number;activa
 export function roomHotspots(dialog:CottageDialog,cat:CatController,phase:()=>Phase):Hotspot[]{
   const say=dialog.say;
   return [
+    {name:'信箱 · 公共留言板',x:133,y:61,w:17,h:21,activate:()=>{dialog.close();openGuestbook();}},
     ...galleryLayout().map(({g,x,y,w,h})=>({name:g.title,x,y,w,h,activate:()=>dialog.showArtwork(g)})),
     {name:'电脑',x:68,y:48,w:26,h:22,activate:()=>say('💻 电脑','这是 Bao 的电脑。\nBao：哈尔滨工程大学毕业，在水下机器人公司做嵌入式工程师。\n平时写 C/C++，玩 STM32、RTOS、ArduSub 和 ROS；\n在学校时做过 AUV/ROV，也打过水下机器人比赛。')},
     {name:'信箱',x:8,y:60,w:26,h:44,activate:()=>say('📮 信箱','想给 Bao 写信？\n✉ Email：（待填写）\n🐙 GitHub：（待填写）\n旗子立起来了，说明……有新邮件？')},

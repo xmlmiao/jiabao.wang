@@ -37,6 +37,13 @@ export function paintRoom(ph:Phase){return pixelCanvas(W,H,X=>{
  galleryLayout().forEach(({g,x,y,w,h})=>{r(x+1,y+2,w,h,'#24213345');r(x,y,w,h,'#443341');r(x+1,y+1,w-2,h-2,'#c49a60');r(x+1,y+1,w-2,1,'#f0d39a');r(x+1,y+1,1,h-2,'#dfbb7d');r(x+2,y+h-2,w-3,1,'#8c623e');
  if(g.timg?.naturalWidth){if(g.crop)X.drawImage(g.timg,...g.crop,x+2,y+2,ART_SIZE,ART_SIZE);else X.drawImage(g.timg,x+2,y+2,ART_SIZE,ART_SIZE)}else if(g.preview)X.drawImage(g.preview,x+2,y+2,ART_SIZE,ART_SIZE);
  });
+ // Public guestbook mailbox, on the wall beside the lamp.
+ r(135,63,15,17,'#24213345');r(134,62,15,17,'#493341');
+ r(135,63,13,14,'#b96558');r(135,63,13,1,'#eaa281');
+ r(137,66,9,2,'#493341');r(137,69,9,6,'#fae5b5');
+ r(137,69,1,1,'#ad795e');r(138,70,1,1,'#ad795e');r(139,71,1,1,'#ad795e');
+ r(140,72,3,1,'#ad795e');r(143,71,1,1,'#ad795e');r(144,70,1,1,'#ad795e');r(145,69,1,1,'#ad795e');
+ r(135,77,13,1,'#884b4e');r(148,61,1,7,'#efbe70');r(149,61,3,3,'#cf725c');
  // Bookshelf: inset back, lit edges, labeled spines, varied heights.
  r(156,34,30,56,'#674b3d');r(156,34,30,1,'#b08b64');r(157,35,1,54,'#967252');r(158,36,26,52,'#382f32');r(184,35,2,55,'#4e3b35');
  const bc=['#be7775','#7aabb1','#d6b66e','#839b77','#a48aa9','#c78c64'];
