@@ -2,9 +2,8 @@ export interface Artwork {
  title:string;year:string;desc:string;pixels?:string[];palette?:Record<string,string>;img?:string;thumb?:string;crop?:[number,number,number,number];featured?:boolean;timg?:HTMLImageElement;preview?:HTMLCanvasElement;
 }
 export const GALLERY:Artwork[] = [
-  { title:"深海小鱼", year:"2026", desc:"在 2000 米水深游泳的小鱼。\n它不知道有个 ROV 正在看它。",
-    palette:{n:"#14325c",l:"#1f4f8a",y:"#ffd25a",r:"#ff7a59",k:"#222034",w:"#fff",g:"#5ad1c8"},
-    pixels:["nnnnnnnnnnnn","nnnwnnnnnnnn","nnnnnnnnnwnn","nnnnyyyynnnn","nrnyyyyyynnn","nrryykyyyynn","nrryyyyyrynn","nrnyyyyyynnn","nnnnyyyynnnn","ngnnnnnnngnn","gglgnnnngglg","llllllllllll"] },
+  { title:"绿荫下的姐妹", year:"", desc:"我的女朋友 Ana 和她的妹妹 Kate。\n一个俏皮吐舌，一个笑着点赞，把姐妹间的小默契藏进绿荫与像素里。",
+    img:"assets/gallery/ana-kate-detail.png", thumb:"assets/gallery/ana-kate-cover.png" },
   { title:"亭前合影", year:"", desc:"亭前的我们，一起比个耶。",
     img:"assets/gallery/pavilion-couple-detail.png", thumb:"assets/gallery/pavilion-couple-cover.png", crop:[180,230,920,920] },
   { title:"夕阳下的我们", year:"", desc:"松花江畔，落日余晖，靠在一起的我们，Bao&Ana",
