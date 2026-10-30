@@ -12,3 +12,6 @@ old-index.html
 cat-*.png
 baxa-pixel.png
 window-*.png
+.wrangler/
+.dev.vars
+.dev.vars.*

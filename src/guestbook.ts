@@ -1,33 +1,23 @@
-const ISSUE='https://github.com/xmlmiao/jiabao.wang/issues/2';
-const API='https://api.github.com/repos/xmlmiao/jiabao.wang/issues/2';
-type Comment={id:number;body:string;html_url:string;created_at:string;user:{login:string}};
+const API=import.meta.env.DEV?'/api/messages':'https://bao-guestbook.wangjiabao0725.workers.dev/api/messages';
+type Message={id:string;name:string;body:string;parent:string|null;created:number};
 export function openGuestbook(){
  let panel=document.querySelector<HTMLDialogElement>('#guestbook');
  if(!panel){
-  panel=document.createElement('dialog');panel.id='guestbook';panel.setAttribute('aria-label','小屋信箱：GitHub 公共留言板');
-  const bar=document.createElement('div');bar.className='guestbook-bar';const title=document.createElement('strong');title.textContent='📮 小屋信箱';const close=document.createElement('button');close.type='button';close.textContent='关闭 ×';close.onclick=()=>panel!.close();bar.append(title,close);
-  const content=document.createElement('div');content.className='guestbook-content';
-  const intro=document.createElement('p');intro.textContent='给小屋留一句问候，也和路过的朋友聊聊天。留言与回复保存在 GitHub，发表时需登录 GitHub。';
-  const actions=document.createElement('div');actions.className='guestbook-actions';
-  function link(text:string,url:string){const a=document.createElement('a');a.textContent=text;a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
-  const write=link('去 GitHub 留言 / 回复 ↗',ISSUE+'#new_comment_field');const refresh=document.createElement('button');refresh.type='button';refresh.textContent='刷新留言';actions.append(write,refresh);
-  const status=document.createElement('p');status.setAttribute('role','status');
-  const list=document.createElement('div');list.className='guestbook-comments';const older=document.createElement('button');older.type='button';older.textContent='查看更早的留言';older.hidden=true;
-  const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='信箱说明与历史留言';const history=document.createElement('p');history.className='guestbook-history';details.append(summary,history);
-  content.append(intro,actions,status,list,older,details);panel.append(bar,content);document.body.append(panel);
-  let page=0,version=0;
-  async function json(url:string){const response=await fetch(url,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});if(!response.ok)throw Error(response.status===403||response.status===429?'GitHub 暂时限制了读取频率，请稍后刷新，或直接打开 GitHub 信箱。':'暂时无法读取留言，可以直接打开 GitHub 信箱。');return response.json();}
-  async function load(reset=true){const run=++version;refresh.disabled=true;older.disabled=true;status.textContent='正在从 GitHub 读取留言…';try{
-    let next=page;
-    if(reset){const issue=await json(API);if(run!==version)return;history.textContent=issue.body||'';next=Math.max(1,Math.ceil(issue.comments/30));}
-    const comments:Comment[]=await json(API+'/comments?per_page=30&page='+next);if(run!==version)return;
-    if(reset)list.replaceChildren();
-    comments.reverse().forEach(c=>{const card=document.createElement('article'),heading=document.createElement('div');heading.className='guestbook-comment-heading';const author=document.createElement('strong');author.textContent=c.user.login;const time=document.createElement('time');time.dateTime=c.created_at;time.textContent=new Date(c.created_at).toLocaleString('zh-CN');heading.append(author,time);const body=document.createElement('p');body.textContent=c.body;card.append(heading,body,link('在 GitHub 回复 ↗',c.html_url));list.append(card);});
-    page=next-1;older.hidden=page<1;status.textContent=list.childElementCount?'':'还没有新的留言，来 GitHub 写下第一句问候吧。';
-   }catch(e){if(run===version)status.textContent=e instanceof Error?e.message:'读取失败，请稍后重试。';}finally{if(run===version){refresh.disabled=false;older.disabled=false;}}}
-  refresh.onclick=()=>{void load()};older.onclick=()=>{void load(false)};
+  panel=document.createElement('dialog');panel.id='guestbook';panel.setAttribute('aria-label','小屋信箱：公共留言板');
+  panel.innerHTML='<div class="guestbook-bar"><strong>📮 小屋信箱</strong><button type="button" class="guestbook-close">关闭 ×</button></div><div class="guestbook-content"><p>留一句问候，也和路过的朋友聊聊天。</p><small>公开留言 · 无需登录 · 昵称由访客自行填写</small><form class="guestbook-form"><label for="gb-name">你的昵称</label><input id="gb-name" maxlength="24" placeholder="怎么称呼你？" required><div class="guestbook-replying" hidden><span></span><button type="button">取消回复</button></div><label for="gb-body">写下留言</label><textarea id="gb-body" maxlength="500" rows="3" placeholder="今天有什么想分享的？" required></textarea><div class="gb-trap" aria-hidden="true"><input name="website" autocomplete="off" tabindex="-1" aria-label="请留空"></div><div class="guestbook-actions"><small>最多 500 字 · 请友善交流，勿留下隐私信息</small><button type="submit">投递留言 ↗</button></div></form><p role="status"></p><div class="guestbook-actions"><strong>大家的留言</strong><button type="button" class="guestbook-refresh">刷新信箱</button></div><div class="guestbook-comments"></div><button type="button" class="guestbook-older" hidden>查看更早的留言</button><details><summary>之前的 GitHub 信箱</summary><p>旧留言也保留在 <a href="https://github.com/xmlmiao/jiabao.wang/issues/2" target="_blank" rel="noopener noreferrer">GitHub 历史信箱 ↗</a>。</p></details></div>';
+  document.body.append(panel);
+  const q=<T extends HTMLElement>(selector:string)=>panel!.querySelector<T>(selector)!;
+  const nickname=q<HTMLInputElement>('#gb-name'),body=q<HTMLTextAreaElement>('#gb-body'),form=q<HTMLFormElement>('form'),send=q<HTMLButtonElement>('[type=submit]'),refresh=q<HTMLButtonElement>('.guestbook-refresh'),older=q<HTMLButtonElement>('.guestbook-older'),list=q<HTMLDivElement>('.guestbook-comments'),status=q<HTMLParagraphElement>('[role=status]'),replying=q<HTMLDivElement>('.guestbook-replying');
+  try{nickname.value=localStorage.getItem('guestbook-name')||''}catch{}
+  let messages:Message[]=[],next:number|null=null,reply:Message|null=null,busy=false,loading=false;
+  function selectReply(message:Message|null){reply=message;replying.hidden=!message;replying.querySelector('span')!.textContent=message?'正在回复 '+message.name:'';if(message)body.focus()}
+  q<HTMLButtonElement>('.guestbook-close').onclick=()=>panel!.close();replying.querySelector('button')!.onclick=()=>selectReply(null);
   panel.addEventListener('click',e=>{if(e.target===panel)panel!.close()});
-  window.addEventListener('focus',()=>{if(panel!.open)void load()});
+  function render(){list.replaceChildren();function card(m:Message,isReply=false){const article=document.createElement('article');if(isReply)article.className='guestbook-reply';const heading=document.createElement('div');heading.className='guestbook-comment-heading';const name=document.createElement('strong');name.textContent=m.name;const time=document.createElement('time');time.dateTime=new Date(m.created).toISOString();time.textContent=new Date(m.created).toLocaleString('zh-CN');heading.append(name,time);const text=document.createElement('p');text.textContent=m.body;article.append(heading,text);if(!isReply){const button=document.createElement('button');button.type='button';button.className='guestbook-reply-button';button.textContent='回复 '+m.name;button.onclick=()=>selectReply(m);article.append(button)}return article}messages.filter(m=>!m.parent).forEach(m=>{const thread=document.createElement('div');thread.className='guestbook-thread';thread.append(card(m));messages.filter(r=>r.parent===m.id).sort((a,b)=>a.created-b.created).forEach(r=>thread.append(card(r,true)));list.append(thread)});older.hidden=!next}
+  async function request(url:string,options?:RequestInit){const response=await fetch(url,{...options,cache:'no-store',signal:AbortSignal.timeout(15000)});const data=await response.json();if(!response.ok)throw Error(data.error||'信箱暂时无法访问');return data}
+  async function load(append=false){if(loading)return;loading=true;refresh.disabled=older.disabled=true;status.textContent='正在打开信箱…';try{const data=await request(API+(append&&next?'?before='+next:''));messages=append?[...messages,...data.messages.filter((m:Message)=>!messages.some(x=>x.id===m.id))]:data.messages;next=data.next;render();status.textContent=messages.length?'':'信箱还空着，来写下第一句问候吧。'}catch(e){status.textContent=e instanceof Error&&e.name!=='TimeoutError'?e.message:'信箱连接较慢，请稍后刷新重试。'}finally{loading=false;refresh.disabled=older.disabled=false}}
+  refresh.onclick=()=>{void load()};older.onclick=()=>{void load(true)};
+  form.onsubmit=async e=>{e.preventDefault();if(busy||loading)return;busy=true;send.disabled=refresh.disabled=older.disabled=true;send.textContent='投递中…';status.textContent='';try{const data=await request(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nickname.value.trim(),body:body.value.trim(),parent:reply?.id,website:q<HTMLInputElement>('[name=website]').value})});try{localStorage.setItem('guestbook-name',nickname.value.trim())}catch{};if(reply){messages.push(data.message)}else{messages.unshift(data.message)}body.value='';selectReply(null);render();status.textContent='已投递，大家都能看见啦。'}catch(e){status.textContent=e instanceof Error&&e.name!=='TimeoutError'?e.message:'投递超时，请先刷新信箱确认；输入内容已保留。'}finally{busy=false;send.disabled=refresh.disabled=older.disabled=false;send.textContent='投递留言 ↗'}};
   void load();
  }
  if(!panel.open)panel.showModal();
