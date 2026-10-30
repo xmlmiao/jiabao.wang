@@ -6,10 +6,23 @@
   "account_id": "ed1367ab3114a7a8c3ff7a60d7028842",
   "workers_dev": true,
   "preview_urls": false,
-  "observability": { "enabled": true, "logs": { "enabled": true } },
-  "d1_databases": [{
-    "binding": "DB",
-    "database_name": "bao-guestbook",
-    "database_id": "3835ddd6-1a4f-4f82-9553-32e256d15410"
-  }]
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true
+    }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bao-guestbook",
+      "database_id": "3835ddd6-1a4f-4f82-9553-32e256d15410"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "guestbook.jiabao.wang",
+      "custom_domain": true
+    }
+  ]
 }

@@ -2,7 +2,7 @@
 
 网站继续由 GitHub Pages 托管。原来的左侧邮箱打开匿名留言表单，调用站长自己账号下的 Cloudflare Worker `bao-guestbook`，留言保存在该账号下的 D1 `bao-guestbook`。
 
-Worker 地址：https://bao-guestbook.wangjiabao0725.workers.dev
+Worker 地址：https://guestbook.jiabao.wang
 接口：GET /api/messages、POST /api/messages
 
 昵称最长 24 字，留言最长 500 字；回复关联到原留言；每个来源 30 秒内只允许一次投递。数据库仅保存来源地址的散列用于限速，不向访客返回此字段。网页按文本显示留言，避免将访客输入解释为 HTML。
@@ -14,3 +14,5 @@ Worker 地址：https://bao-guestbook.wangjiabao0725.workers.dev
 用 Node.js 24 运行 `node workers/verify.mjs` 验证回复、输入校验、限速和跨站访问限制。测试使用内存数据库，不写入正式 D1。
 
 旧 GitHub 信箱已删除。先前的 Sites 留言服务按用户要求暂时保留，不作为新表单的存储来源。
+
+正式网页使用自有域名 guestbook.jiabao.wang，避免依赖 workers.dev 的网络可达性。域名 DNS 托管在站长自己的 Cloudflare 账号中，原有 GitHub Pages 与域名验证记录均保留。wrangler.json 的 custom_domain 路由需随部署保留。

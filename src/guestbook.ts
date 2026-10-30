@@ -1,4 +1,4 @@
-const API=import.meta.env.DEV?'/api/messages':'https://bao-guestbook.wangjiabao0725.workers.dev/api/messages';
+const API=import.meta.env.DEV?'/api/messages':'https://guestbook.jiabao.wang/api/messages';
 type Message={id:string;name:string;body:string;parent:string|null;created:number};
 export function openGuestbook(){
  let panel=document.querySelector<HTMLDialogElement>('#guestbook');
