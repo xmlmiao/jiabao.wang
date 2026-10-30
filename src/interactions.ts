@@ -1,5 +1,5 @@
 import { galleryLayout } from './gallery';
-import { openGuestbook } from './guestbook';
+const openGuestbook=()=>{void import('./guestbook').then(module=>module.openGuestbook())};
 import { BOX, type Phase } from './world';
 import type { CatController } from './cat/model';
 import type { CottageDialog } from './dialog';

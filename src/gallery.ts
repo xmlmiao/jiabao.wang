@@ -3,20 +3,20 @@ export interface Artwork {
 }
 export const GALLERY:Artwork[] = [
   { title:"绿荫下的姐妹", year:"", desc:"我的女朋友 Ana 和她的妹妹 Kate。\n一个俏皮吐舌，一个笑着点赞，把姐妹间的小默契藏进绿荫与像素里。",
-    img:"assets/gallery/ana-kate-detail.png", thumb:"assets/gallery/ana-kate-cover.png" },
+    img:"assets/gallery/ana-kate-detail.webp", thumb:"assets/gallery/ana-kate-cover-small.webp" },
   { title:"亭前合影", year:"", desc:"亭前的我们，一起比个耶。",
-    img:"assets/gallery/pavilion-couple-detail.png", thumb:"assets/gallery/pavilion-couple-cover.png", crop:[180,230,920,920] },
+    img:"assets/gallery/pavilion-couple-detail.webp", thumb:"assets/gallery/pavilion-couple-cover-small.webp" },
   { title:"夕阳下的我们", year:"", desc:"松花江畔，落日余晖，靠在一起的我们，Bao&Ana",
-    img:"assets/gallery/sunset-couple-detail-v2.png", thumb:"assets/gallery/sunset-couple-cover.png", crop:[68,112,1118,1118] },
+    img:"assets/gallery/sunset-couple-detail-v2.webp", thumb:"assets/gallery/sunset-couple-cover-small.webp" },
   { title:"毕业典礼", year:"", desc:"2026年6月24号毕业典礼，Bao和胶哥在北体激情比心❤",
-    img:"assets/gallery/grad-2026-detail-selected.png", thumb:"assets/gallery/grad-2026-cover-selected.png" },
+    img:"assets/gallery/grad-2026-detail-selected.webp", thumb:"assets/gallery/grad-2026-cover-selected-small.webp" },
 ];
 export const ART_SIZE=20;
-export async function prepareGallery(){
- await Promise.all(GALLERY.map(async g=>{
-  if(g.thumb){const image=new Image();g.timg=image;await new Promise<void>(resolve=>{image.onload=()=>resolve();image.onerror=()=>{g.timg=undefined;resolve()};image.src=assetUrl(g.thumb!)});}
-  else if(g.pixels&&g.palette){const canvas=document.createElement('canvas');canvas.width=g.pixels[0].length;canvas.height=g.pixels.length;const ctx=canvas.getContext('2d')!;g.pixels.forEach((row,y)=>[...row].forEach((ch,x)=>{const c=g.palette![ch];if(c){ctx.fillStyle=c;ctx.fillRect(x,y,1,1)}}));g.preview=canvas;}
- }));
+export function prepareGallery(){
+ for(const g of GALLERY){
+  if(g.thumb){const image=new Image();image.decoding="async";image.fetchPriority="low";g.timg=image;image.onerror=()=>{g.timg=undefined};image.src=assetUrl(g.thumb)}
+  else if(g.pixels&&g.palette){const canvas=document.createElement("canvas");canvas.width=g.pixels[0].length;canvas.height=g.pixels.length;const ctx=canvas.getContext("2d")!;g.pixels.forEach((row,y)=>[...row].forEach((ch,x)=>{const c=g.palette![ch];if(c){ctx.fillStyle=c;ctx.fillRect(x,y,1,1)}}));g.preview=canvas;}
+ }
 }
 export function assetUrl(path:string){return import.meta.env.BASE_URL+path;}
 export function galleryLayout(){

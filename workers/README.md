@@ -13,4 +13,4 @@ Worker 地址：https://bao-guestbook.wangjiabao0725.workers.dev
 
 用 Node.js 24 运行 `node workers/verify.mjs` 验证回复、输入校验、限速和跨站访问限制。测试使用内存数据库，不写入正式 D1。
 
-GitHub Issue #2 保留历史交流。先前的 Sites 留言服务按用户要求暂时保留，不作为新表单的存储来源。
+旧 GitHub 信箱已删除。先前的 Sites 留言服务按用户要求暂时保留，不作为新表单的存储来源。
